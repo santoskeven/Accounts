@@ -31,6 +31,7 @@ function Operation(){
                 Sacar()
             break;
             case 'Sair':
+                
                 process.exit()
             break;
         }
