@@ -15,7 +15,7 @@ function Operation(){
             type: 'list',
             name: 'action',
             message: 'O que deseja fazer?',
-            choices: ['Criar Conta', 'Consultar Saldo', 'Depositar', 'Sacar', 'Sair']
+            choices: ['Criar Conta', 'Consultar Saldo', 'Depositar', 'Sacar', 'Transferência', 'Sair']
         }
     ]).then((answer) => {
 
@@ -33,6 +33,9 @@ function Operation(){
             break;
             case 'Sacar':
                 Sacar()
+            break;
+            case 'Transferência':
+                Transferência()
             break;
             case 'Sair':
                Sair()
@@ -207,6 +210,80 @@ function Sacar(){
 }
 
 
+//FUNÇÃO PARA FAZER TRANFERÊNCIA DE UMA CONTA PARA OUTRA
+function Transferência(){
+
+    inquirer.prompt([
+        {
+            name: 'account',
+            message: 'Digite o nome da sua conta'
+        }
+    ]).then((answer) => {
+
+        const AccountName = answer['account']
+
+        if(!CheckAccount(AccountName)){
+            return Transferência()
+        }
+
+            inquirer.prompt([
+                {
+                    name: 'amount',
+                    message: 'Digite o valor que deseja transferir'
+                }
+            ]).then((answer) => {
+
+                const amount = answer['amount']
+
+                if(!amount){
+                    console.log('Adicione um valor para transferir')
+                    return Transferência()
+                }
+
+                    inquirer.prompt([
+                        {
+                            name:'accountReceivable',
+                            message: 'Digite o nome da conta que irá receber o valor'
+                        }
+                    ]).then((answer) => {
+
+                        const accountReceivable = answer['accountReceivable']
+                        const contaAtual = PegarConta(AccountName)
+                        const contaReceber = PegarContaSecundária(accountReceivable)
+
+                        if(!CheckAccountS(accountReceivable)){
+                            console.log(chalk.bgRed('entrou na condição'))
+                            return Transferência()
+                        }
+
+
+                        contaReceber.balance = parseFloat(contaReceber.balance) + parseFloat(amount)
+
+                        fs.writeFileSync(`./accounts/${accountReceivable}.json`,
+                            JSON.stringify(contaReceber),
+                            (err) => console.log(err)
+                        )
+
+                        contaAtual.balance =  parseFloat(contaAtual.balance) - parseFloat(amount)
+
+                        fs.writeFileSync(`./accounts/${AccountName}.json`,
+                            JSON.stringify(contaAtual),
+                            (err) => console.log(err)
+                        )
+
+                        console.log(chalk.bgGreen(`você tranferiu ${amount} para ${accountReceivable}`))
+
+                        return Operation()
+
+                    })
+
+            }).catch(err => console.log(err))
+
+    }).catch(err => console.log(err))
+
+}
+
+
 //FUNÇÃO AUXILIAR PARA PEGAR O NOME DE UMA CONTA
 function PegarConta(AccountName){
 
@@ -216,9 +293,29 @@ function PegarConta(AccountName){
 
 }
 
+//FUNÇÃO PARA PEGAR OUTRO CONTA DENTRO DENTRO DA MESMA FUNÇÃO
+//ESTAVA TENDO PROBLEMAS AO CHMAR A MESMA FUNÇÃO PARA DEFINIR O VALOR DE DUAS CONTATANTES DIFERENTES COM PARAMENTROS DIFERENTES, VAI SER UMA SOLUÇÃO TEMPORARIA
+function PegarContaSecundária(AccountName){
+
+    const AccountJson = fs.readFileSync(`./accounts/${AccountName}.json`)
+
+    return JSON.parse(AccountJson)
+
+}
+
+
 
 //FUNÇÃO PARA VERIFICAR SE UMA CONTA EXISTE OU NÃO
 function CheckAccount(AccountName){
+
+    if(!fs.existsSync(`./accounts/${AccountName}.json`)){
+        console.log(chalk.bgRed('essa conta não existe, tente novamente'))
+        return false;
+    }
+    return true
+}
+
+function CheckAccountS(AccountName){
 
     if(!fs.existsSync(`./accounts/${AccountName}.json`)){
         console.log(chalk.bgRed('essa conta não existe, tente novamente'))
