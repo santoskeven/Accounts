@@ -3,7 +3,6 @@ const inquirer = require('inquirer');
 const chalk = require('chalk');
 
 
-
 //  A FUNÇÃO OPERATION É RESPONSÁVEL POR FORNECER AS OPÇÕES DE AÇÕES PARA O USUÁRIO
 
 Operation()
@@ -247,19 +246,18 @@ function Transferência(){
                         }
                     ]).then((answer) => {
 
-                        const accountReceivable = answer['accountReceivable']
-                        const contaAtual = PegarConta(AccountName)
-                        const contaReceber = PegarContaSecundária(accountReceivable)
-
-                        if(!CheckAccountS(accountReceivable)){
-                            console.log(chalk.bgRed('entrou na condição'))
+                        const AccountReceivable = answer['accountReceivable'];
+                        
+                        if(!CheckAccount(AccountReceivable)){
                             return Transferência()
                         }
 
+                        const contaAtual = PegarConta(AccountName);
+                        const contaReceber = PegarConta(AccountReceivable);                        
 
                         contaReceber.balance = parseFloat(contaReceber.balance) + parseFloat(amount)
 
-                        fs.writeFileSync(`./accounts/${accountReceivable}.json`,
+                        fs.writeFileSync(`./accounts/${AccountReceivable}.json`,
                             JSON.stringify(contaReceber),
                             (err) => console.log(err)
                         )
@@ -271,7 +269,7 @@ function Transferência(){
                             (err) => console.log(err)
                         )
 
-                        console.log(chalk.bgGreen(`você tranferiu ${amount} para ${accountReceivable}`))
+                        console.log(chalk.bgGreen(`você tranferiu ${amount} para ${AccountReceivable}`))
 
                         return Operation()
 
@@ -293,29 +291,9 @@ function PegarConta(AccountName){
 
 }
 
-//FUNÇÃO PARA PEGAR OUTRO CONTA DENTRO DENTRO DA MESMA FUNÇÃO
-//ESTAVA TENDO PROBLEMAS AO CHMAR A MESMA FUNÇÃO PARA DEFINIR O VALOR DE DUAS CONTATANTES DIFERENTES COM PARAMENTROS DIFERENTES, VAI SER UMA SOLUÇÃO TEMPORARIA
-function PegarContaSecundária(AccountName){
-
-    const AccountJson = fs.readFileSync(`./accounts/${AccountName}.json`)
-
-    return JSON.parse(AccountJson)
-
-}
-
-
 
 //FUNÇÃO PARA VERIFICAR SE UMA CONTA EXISTE OU NÃO
 function CheckAccount(AccountName){
-
-    if(!fs.existsSync(`./accounts/${AccountName}.json`)){
-        console.log(chalk.bgRed('essa conta não existe, tente novamente'))
-        return false;
-    }
-    return true
-}
-
-function CheckAccountS(AccountName){
 
     if(!fs.existsSync(`./accounts/${AccountName}.json`)){
         console.log(chalk.bgRed('essa conta não existe, tente novamente'))
